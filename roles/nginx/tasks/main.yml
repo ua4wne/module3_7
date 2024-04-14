@@ -1,0 +1,45 @@
+---
+# tasks file for nginx
+- name: Create users
+  user:
+    name: "{{ item.name }}"
+    password: "{{ upassword | string | password_hash('sha512') }}"
+    groups:
+      - sudo
+    append: yes
+    shell: /bin/bash
+    create_home: yes
+  with_items: 
+    - "{{ users }}"
+- name: Add ssh keys
+  authorized_key:
+    key: "{{ item.1 }}"
+    user: "{{ item.0.name }}"
+  with_subelements:
+    - "{{ users }}"
+    - key
+- name : Install multiple packages
+  apt: name={{ item }} state=present update_cache=true
+  loop: [chrony, python3.8, python3-pip, virtualenv, mc]
+- name: Install nginx
+  tags: nginx
+  block:
+    - name: Install Nginx and Certbot
+      tags: nginx
+      apt:
+        pkg:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: latest
+      update_cache: true
+    - name: Remove default config nginx
+      file: name=/etc/nginx/sites-enabled/default state=absent
+    - name: Add virtual host to nginx
+      template:
+        src: templates/nginx-http.j2
+        dest: /etc/nginx/sites-available/{{ domain_name }}
+    - name: Enable nginx
+      shell: ln -s /etc/nginx/sites-available/{{ domain_name }} /etc/nginx/sites-enabled/{{ domain_name }}
+      notify: Reload nginx
+      

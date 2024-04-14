@@ -1,1 +1,26 @@
 ---
+- name: Configure web-server
+  hosts: all
+  vars:
+    domain_name: "{{ lookup('redis', 'ansible/domain_name') }}"
+    sshd:
+      PermitRootLogin: no
+      PasswordAuthentication: no
+      PubkeyAuthentication: yes
+  roles:
+    - nginx
+    - ansible-sshd
+  post_tasks:
+    - name: extra tasks
+      tags: print
+      block:
+        - name: Print IPv4 address
+          debug:
+            msg: "ipv4={{ ansible_all_ipv4_addresses[0] }}"
+        - name: Get kernel version
+          shell: uname -a
+          register: uname
+        - name: Print kernel version
+          debug:
+            msg: "Kernel version: {{ uname.stdout }}"
+
