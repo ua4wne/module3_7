@@ -1,0 +1,3 @@
+[web_servers]
+srv1 ansible_ssh_host=192.168.1.48 ansible_ssh_user=dervish
+srv2 ansible_ssh_host=192.168.1.77 ansible_ssh_user=dervish

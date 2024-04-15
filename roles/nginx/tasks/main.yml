@@ -18,21 +18,28 @@
   with_subelements:
     - "{{ users }}"
     - key
-- name : Install multiple packages
-  apt: name={{ item }} state=present update_cache=true
-  loop: [chrony, python3.8, python3-pip, virtualenv, mc]
+- name: Install multiple packages
+  apt: 
+    pkg: "{{ item }}" 
+    state: present
+  loop:
+    - chrony
+    - python3.8
+    - python3-pip
+    - virtualenv
+    - mc
 - name: Install nginx
   tags: nginx
   block:
     - name: Install Nginx and Certbot
       tags: nginx
-      apt:
-        pkg:
-          - nginx
-          - certbot
-          - python3-certbot-nginx
-        state: latest
-      update_cache: true
+      apt: 
+        pkg: "{{ item }}" 
+        state: present
+      loop:
+        - nginx
+        - certbot
+        - python3-certbot-nginx
     - name: Remove default config nginx
       file: name=/etc/nginx/sites-enabled/default state=absent
     - name: Add virtual host to nginx
@@ -41,5 +48,5 @@
         dest: /etc/nginx/sites-available/{{ domain_name }}
     - name: Enable nginx
       shell: ln -s /etc/nginx/sites-available/{{ domain_name }} /etc/nginx/sites-enabled/{{ domain_name }}
-      notify: Reload nginx
+      notify: restart nginx
       
